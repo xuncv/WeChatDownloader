@@ -1,0 +1,58 @@
+import win.ui;
+import process
+import winex
+import win.dlg.message
+import inet.downBox
+import fsys.dlg
+
+/*DSG{{*/
+mainForm = win.form(text="WeChatDownloader";right=959;bottom=135;max=false)
+mainForm.add(
+btnDownload={cls="button";text="下载视频";left=177;top=91;right=317;bottom=123;z=3};
+btnGetLink={cls="button";text="获取视频地址";left=17;top=91;right=157;bottom=123;z=2};
+edit={cls="edit";left=17;top=14;right=942;bottom=82;edge=1;multiline=1;z=1}
+)
+/*}}*/
+
+msg = win.dlg.message()
+getLink = function(){
+	var pHwnd,tid,pid = winex.find("FinderFeedWebWnd","视频号")
+	if(!pHwnd){
+		msg.warn("未找到视频号浏览器，请先打开视频")
+		return false; 
+	}
+	if(pHwnd){
+		for hwnd,title,threadId,processId in winex.each(, ,pHwnd) { 	
+			prcs = process( processId )
+			for( addr,len,str,i,j,pattern,protect,mtype
+				in prcs.eachQuery(  , ,"https\://finder\.video\.qq\.com\/251\/20302\/\S+\z" ) ){
+				s = string.match(str,"(https\://finder\.video\.qq\.com\/251\/20302\/\S+)\z")
+				return string.str(s); 
+			}
+			prcs.free();
+		}		
+	}
+}
+
+mainForm.btnGetLink.oncommand = function(id,event){
+	var url = getLink()
+	if(url){
+		mainForm.edit.text = url
+	}
+}
+mainForm.btnDownload.oncommand = function(id,event){
+	var url = mainForm.edit.text
+	if(#url and inet.url.is(url,0x0/*_URLIS_URL*/)){
+		var info = inet.url.split(url)
+		var name = string.match( info.path,"\/(\w+)$" ) + ".mp4"
+		var dir = fsys.dlg.save(".mp4","设置下载目录","./",,,name)
+		if(dir){
+			dBox = inet.downBox(mainForm,"downloader",3000)
+			var path = dBox.download(url,dir)
+			process.exploreSelect(path)
+		}
+	}
+}
+
+mainForm.show();
+return win.loopMessage();
